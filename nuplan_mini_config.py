@@ -4,17 +4,17 @@ import numpy as np
 from tbsim.configs.trajdata_config import TrajdataTrainConfig, TrajdataEnvConfig
 
 
-class NuplanTrajdataTrainConfig(TrajdataTrainConfig):
+class NuplanMiniTrajdataTrainConfig(TrajdataTrainConfig):
     def __init__(self):
-        super(NuplanTrajdataTrainConfig, self).__init__()
+        super(NuplanMiniTrajdataTrainConfig, self).__init__()
 
         self.trajdata_cache_location = "~/.unified_data_cache"
-        self.trajdata_source_train = ["nuplan_mini-mini_train"]
-        self.trajdata_source_valid = ["nuplan_mini-mini_val"]
+        self.trajdata_source_train = ["nuplan-mini_train"]
+        self.trajdata_source_valid = ["nuplan-mini_val"]
         # dict mapping dataset IDs -> root path
         #       all datasets that will be used must be included here
         self.trajdata_data_dirs = {
-            "nuplan_mini" : "/home/stud/nguyenti/storage/user/datasets/nuplan/",
+            "nuplan" : "/home/stud/nguyenti/storage/user/datasets/nuplan/",  # Updated to your path
         }
 
         # for debug
@@ -25,36 +25,35 @@ class NuplanTrajdataTrainConfig(TrajdataTrainConfig):
         self.rollout.every_n_steps = 10000
         self.rollout.warm_start_n_steps = 0
 
-        # training config
-        # assuming 1 sec (10 steps) past, 2 sec (20 steps) future
-        self.training.batch_size = 50 # 100
-        self.training.num_steps = 100000
-        self.training.num_data_workers = 8
+        # training config - reduced for mini dataset
+        self.training.batch_size = 16  # Reduced for mini dataset
+        self.training.num_steps = 50000  # Reduced for faster training
+        self.training.num_data_workers = 4
 
-        self.save.every_n_steps = 10000
-        self.save.best_k = 10
+        self.save.every_n_steps = 5000
+        self.save.best_k = 5
 
         # validation config
         self.validation.enabled = True
-        self.validation.batch_size = 32
-        self.validation.num_data_workers = 6
-        self.validation.every_n_steps = 500
-        self.validation.num_steps_per_epoch = 5 # 50
+        self.validation.batch_size = 8
+        self.validation.num_data_workers = 2
+        self.validation.every_n_steps = 1000
+        self.validation.num_steps_per_epoch = 10
 
         self.on_ngc = False
-        self.logging.terminal_output_to_txt = True  # whether to log stdout to txt file
-        self.logging.log_tb = False  # enable tensorboard logging
-        self.logging.log_wandb = True  # enable wandb logging
-        self.logging.wandb_project_name = "tbsim"
-        self.logging.log_every_n_steps = 10
-        self.logging.flush_every_n_steps = 100
+        self.logging.terminal_output_to_txt = True
+        self.logging.log_tb = True  # Enable tensorboard
+        self.logging.log_wandb = False  # Disable wandb for testing
+        self.logging.wandb_project_name = "tbsim_nuplan_mini"
+        self.logging.log_every_n_steps = 100
+        self.logging.flush_every_n_steps = 500
 
 
-class NuplanTrajdataEnvConfig(TrajdataEnvConfig):
+class NuplanMiniTrajdataEnvConfig(TrajdataEnvConfig):
     def __init__(self):
-        super(NuplanTrajdataEnvConfig, self).__init__()
+        super(NuplanMiniTrajdataEnvConfig, self).__init__()
 
-        self.data_generation_params.trajdata_centric = "agent" # or "scene"
+        self.data_generation_params.trajdata_centric = "agent"  # or "scene"
         # which types of agents to include from ['unknown', 'vehicle', 'pedestrian', 'bicycle', 'motorcycle']
         self.data_generation_params.trajdata_only_types = ["vehicle"]
         # which types of agents to predict
@@ -62,23 +61,22 @@ class NuplanTrajdataEnvConfig(TrajdataEnvConfig):
         # list of scene description filters
         self.data_generation_params.trajdata_scene_desc_contains = None
         # whether or not to include the map in the data
-        #       TODO: handle mixed map-nomap datasets
         self.data_generation_params.trajdata_incl_map = True
         # max distance to be considered neighbors
         self.data_generation_params.trajdata_max_agents_distance = 50
-        # standardize position and heading for the predicted agnet
+        # standardize position and heading for the predicted agent
         self.data_generation_params.trajdata_standardize_data = True
 
         # NOTE: rasterization info must still be provided even if incl_map=False
         #       since still used for agent states
         # number of semantic layers that will be used (based on which trajdata dataset is being used)
-        self.rasterizer.num_sem_layers = 3 # 7
+        self.rasterizer.num_sem_layers = 3  # nuPlan typically uses 3 layers
         # how to group layers together to viz RGB image
         self.rasterizer.rgb_idx_groups = ([0], [1], [2])
         # raster image size [pixels]
         self.rasterizer.raster_size = 224
         # raster's spatial resolution [meters per pixel]: the size in the real world one pixel corresponds to.
-        self.rasterizer.pixel_size = 1.0 / 2.0 # 2 px/m
+        self.rasterizer.pixel_size = 1.0 / 2.0  # 2 px/m
         # where the agent is on the map, (0.0, 0.0) is the center
         self.rasterizer.ego_center = (-0.5, 0.0)
 
@@ -86,4 +84,4 @@ class NuplanTrajdataEnvConfig(TrajdataEnvConfig):
         self.data_generation_params.other_agents_num = None
 
         # max_neighbor_num (int, optional): The maximum number of neighbors to include in a batch for agent-centric batching.
-        self.data_generation_params.max_neighbor_num = 20
+        self.data_generation_params.max_neighbor_num = 10  # Reduced for mini dataset 

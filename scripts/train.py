@@ -27,6 +27,7 @@ def main(cfg, auto_remove_exp_dir=False, debug=False):
         set_global_batch_type("trajdata")
         if cfg.env.name == "nusc":
             set_global_trajdata_batch_env("nusc_trainval")
+        
         elif cfg.env.name == "trajdata":
             # assumes all used trajdata datasets use share same map layers
             set_global_trajdata_batch_env(cfg.train.trajdata_source_train[0])
@@ -64,7 +65,7 @@ def main(cfg, auto_remove_exp_dir=False, debug=False):
     if not cfg.devices.num_gpus > 1:
         # Override strategy when training on a single GPU
         with cfg.train.unlocked():
-            cfg.train.parallel_strategy = None
+            cfg.train.parallel_strategy = "auto"
     if cfg.train.parallel_strategy in ["ddp_spawn"]:
         with cfg.train.training.unlocked():
             cfg.train.training.batch_size = int(
@@ -200,7 +201,8 @@ def main(cfg, auto_remove_exp_dir=False, debug=False):
         # all callbacks
         callbacks=train_callbacks,
         # device & distributed training setup
-        gpus=cfg.devices.num_gpus,
+        devices=cfg.devices.num_gpus,
+        accelerator="gpu" if cfg.devices.num_gpus > 0 else "cpu",
         strategy=cfg.train.parallel_strategy,
         # setting for overfit debugging
         # limit_val_batches=0,

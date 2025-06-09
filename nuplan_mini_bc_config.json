@@ -1,0 +1,106 @@
+{
+    "registered_name": "custom_nuplan_mini_bc",
+    "name": "nuplan_mini_bc_experiment",
+    "root_dir": "nuplan_mini_trained_models/",
+    "seed": 42,
+    "devices": {
+        "num_gpus": 1
+    },
+    "train": {
+        "trajdata_cache_location": "~/.unified_data_cache",
+        "trajdata_source_train": ["nuplan-mini_train"],
+        "trajdata_source_valid": ["nuplan-mini_val"],
+        "trajdata_data_dirs": {
+            "nuplan": "/home/stud/nguyenti/storage/user/datasets/nuplan/"
+        },
+        "trajdata_rebuild_cache": false,
+        "training": {
+            "batch_size": 16,
+            "num_steps": 50000,
+            "num_data_workers": 4
+        },
+        "validation": {
+            "enabled": true,
+            "batch_size": 8,
+            "num_data_workers": 2,
+            "every_n_steps": 1000,
+            "num_steps_per_epoch": 10
+        },
+        "save": {
+            "enabled": true,
+            "every_n_steps": 5000,
+            "best_k": 5,
+            "save_best_validation": true,
+            "save_best_rollout": false
+        },
+        "rollout": {
+            "enabled": true,
+            "save_video": true,
+            "every_n_steps": 10000,
+            "warm_start_n_steps": 0,
+            "num_episodes": 5
+        },
+        "logging": {
+            "terminal_output_to_txt": true,
+            "log_tb": true,
+            "log_wandb": false,
+            "wandb_project_name": "tbsim_nuplan_mini",
+            "log_every_n_steps": 100,
+            "flush_every_n_steps": 500
+        },
+        "on_ngc": false,
+        "datamodule_class": "PassUnifiedDataModule"
+    },
+    "env": {
+        "name": "trajdata",
+        "data_generation_params": {
+            "trajdata_centric": "agent",
+            "trajdata_only_types": ["vehicle"],
+            "trajdata_predict_types": ["vehicle"],
+            "trajdata_incl_map": true,
+            "trajdata_max_agents_distance": 50.0,
+            "trajdata_standardize_data": true,
+            "other_agents_num": null,
+            "max_neighbor_num": 10
+        },
+        "rasterizer": {
+            "include_hist": true,
+            "num_sem_layers": 3,
+            "rgb_idx_groups": [[0], [1], [2]],
+            "raster_size": 224,
+            "pixel_size": 0.5,
+            "ego_center": [-0.5, 0.0],
+            "no_map_fill_value": -1.0,
+            "drivable_layers": null
+        },
+        "history_num_frames": 10,
+        "future_num_frames": 20,
+        "step_time": 0.1
+    },
+    "algo": {
+        "name": "bc",
+        "loss_weights": {
+            "prediction_loss": 1.0,
+            "goal_loss": 0.0,
+            "collision_loss": 0.0
+        },
+        "future_num_frames": 20,
+        "step_time": 0.1,
+        "model_architecture": "resnet18",
+        "map_feature_dim": 256,
+        "dynamics": {
+            "type": "Unicycle",
+            "max_steer": 0.5,
+            "max_yawvel": 3.14,
+            "acce_bound": [-10, 8],
+            "ddh_bound": [-3.2, 3.2],
+            "max_speed": 40.0
+        },
+        "decoder": {
+            "layer_dims": [512, 512, 256]
+        },
+        "spatial_softmax": {
+            "enabled": false
+        }
+    }
+} 

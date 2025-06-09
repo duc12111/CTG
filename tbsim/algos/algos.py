@@ -153,7 +153,9 @@ class BehaviorCloning(pl.LightningModule):
         pout = self.nets["policy"](batch)
         losses = TensorUtils.detach(self.nets["policy"].compute_losses(pout, batch))
         metrics = self._compute_metrics(pout, batch)
-        return {"losses": losses, "metrics": metrics}
+        output = {"losses": losses, "metrics": metrics}
+        
+        return output
 
     def validation_epoch_end(self, outputs) -> None:
         for k in outputs[0]["losses"]:
@@ -163,6 +165,7 @@ class BehaviorCloning(pl.LightningModule):
         for k in outputs[0]["metrics"]:
             m = np.stack([o["metrics"][k] for o in outputs]).mean()
             self.log("val/metrics_" + k, m)
+            
 
     def configure_optimizers(self):
         optim_params = self.algo_config.optim_params["policy"]
